@@ -1,8 +1,8 @@
 import numpy as np
 import copy
+from blackjack import blackjack
+from BJRL import BJRL
 
-import blackjack
-import BJRL
 
 def main():
     print("\nWelcome to my Blackjack RL bot\n")
@@ -10,38 +10,37 @@ def main():
     while True:
         user = input("1. Game demo\n2. Train\n3. Run agent\n4. Evaluate agent\n5. Quit\n")
 
-        if (user == "1"):
+        if user == "1":
             game_demo()
-        elif (user == "2"):
+        elif user == "2":
             train_agent()
-        elif (user == "3"):
+        elif user == "3":
             run_agent()
-        elif (user == "4"):
+        elif user == "4":
             evaluate_agent()
-        elif (user == "5"):
+        elif user == "5":
             break
         else:
             print("\n[-] Error: please enter a valid option\n")
 
 
 def game_demo():
-    b = blackjack.blackjack(verbose=True)
+    b = blackjack(verbose=True)
 
-    while True:        
+    while True:
         b.deal()
+        over = False
 
-        while True:
+        while not over:
             reward, over = b.choose_action(int(input("choose action: ")))
+            print("[*] Reward:", reward)
 
-            if over:
-                print("[*] Reward:", reward)
-                break
-                
-        if input("\nPress enter to continue\n")!="":
+        if not input("\nPress enter to continue\n") == "":
             break
 
+
 def train_agent():
-    agent = BJRL.BJRL()
+    agent = BJRL()
     agent.train(700000)
 
     user = input("\nWould you like to save? y/n\n")
@@ -49,14 +48,15 @@ def train_agent():
     if user == "y":
         agent.save()
 
+
 def run_agent():
-    b = blackjack.blackjack()
+    b = blackjack()
 
     print("[*] Loading agent")
     agent = Agent()
     agent.load_agent()
 
-    while True:        
+    while True:
         b.deal()
         b2 = copy.deepcopy(b)
 
@@ -66,11 +66,13 @@ def run_agent():
 
         over, over2 = False, False
 
-        while True:   
+        while True:
             state1 = b.get_state()
             state2 = b2.get_state()
-
             print_states(state1, state2)
+
+            reward = None
+            reward2 = None
 
             if not over:
                 reward, over = b.choose_action(int(input("choose action: ")))
@@ -82,43 +84,45 @@ def run_agent():
 
                 print_states(state1, state2)
 
-                if (reward > reward2):
+                if reward > reward2:
                     print("You win!")
-                elif (reward < reward2):
+                elif reward < reward2:
                     print("AI wins!")
                 else:
                     print("Tie")
 
                 break
-                
-        if input("\nPress enter to continue\n")!="":
+
+        if input("\nPress enter to continue\n") != "":
             break
+
 
 def print_states(state1, state2):
     print("\n       --------Action---------")
     print("          P1     |      AI")
 
-    if len(str(state1[1]))==1:
-        print("Dealer:", state1[1] , "       |   ", state2[1])
+    if len(str(state1[1])) == 1:
+        print("Dealer:", state1[1], "       |   ", state2[1])
     else:
-        print("Dealer:", state1[1] , "      |   ", state2[1])
+        print("Dealer:", state1[1], "      |   ", state2[1])
 
-    if len(str(state1[0]))==1:
+    if len(str(state1[0])) == 1:
         print("Player:", state1[0], "       |   ", state2[0])
     else:
         print("Player:", state1[0], "      |   ", state2[0])
 
-def evaluate_agent(num_iters=50000):
-    b = blackjack.blackjack()
 
-    agent = Agent()    
+def evaluate_agent(num_iters=50000):
+    b = blackjack()
+
+    agent = Agent()
     agent.load_agent(input("\nEnter filename: ") + ".npy")
 
-    record = np.empty(num_iters+1)
+    record = np.empty(num_iters + 1)
 
     print("[*] Running samples")
 
-    for i in range(num_iters+1):
+    for i in range(num_iters + 1):
         record[i] = agent.run_episode(b)
 
     wins = np.sum(record == 1)
@@ -130,10 +134,10 @@ def evaluate_agent(num_iters=50000):
     print("Wins: {}".format(wins))
     print("Ties: {}".format(ties))
     print("Losses: {}".format(losses))
-    print("Win probability: {}% | Average player: 44-48%\n".format(round((wins/num_iters) * 100, 2)))
-    
+    print("Win probability: {}% | Average player: 44-48%\n".format(round((wins / num_iters) * 100, 2)))
 
-class Agent():
+
+class Agent:
 
     def __init__(self):
         self.policy = np.empty((22, 22, 2))
@@ -144,21 +148,21 @@ class Agent():
 
     def get_action(self, state):
         return np.argmax(self.policy[state[0], state[1]])
-    
+
     def run_episode(self, b):
         b.deal()
+        over = False
+        reward = None
 
-        while True:
+        while not over:
             agent_sum, dealer_sum = b.get_state()
 
-            #actions array substituted
+            # actions array substituted
             action = np.random.choice([0, 1], p=self.policy[agent_sum, dealer_sum])
 
             reward, over = b.choose_action(action)
 
-            if over:
-                break
-
         return reward
+
 
 main()

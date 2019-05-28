@@ -1,51 +1,51 @@
 import numpy as np
 import random
 
+
 def build_deck():
-        v=0
-        deck = np.empty(52, dtype=int)
+    v = 0
+    deck = np.empty(52, dtype=int)
 
-        for i in range(9):
-            v+=1
-            deck[i*4:i*4+4]= v
+    for i in range(9):
+        v += 1
+        deck[i*4:i*4+4] = v
 
-        deck[36:52] = 10
+    deck[36:52] = 10
 
-        return deck
+    return deck
 
 
-class blackjack():   
+class blackjack():
 
     def __init__(self, verbose=False):
         self.deck = np.empty(52, dtype=int)
         self.verbose = verbose
-
-
-    def deal(self):        
-        self.deck = build_deck()
         self.end = 51
         self.dealer = 0
         self.agent = 0
+
+    def deal(self):        
+        self.deck = build_deck()
 
         self.dealer, self.deck = self.draw_card(self.deck, self.dealer)
         self.dealer, self.deck = self.draw_card(self.deck, self.dealer)
         self.agent, self.deck = self.draw_card(self.deck, self.agent)
 
-        if (self.verbose==True):
+        if self.verbose:
             print("---------Deal----------")
             self.print_state()
 
-    #0: hit, 1: hold
+    # 0: hit, 1: hold
     def choose_action(self, action):
         deck = self.deck
         dealer = self.dealer
         agent = self.agent
         over = False
 
-        if (action==0):
+        if action == 0:
             agent, deck = self.draw_card(deck, agent)
 
-            if(agent > 21):
+            if agent > 21:
                 over = True
                 reward = -1
             else:
@@ -53,12 +53,12 @@ class blackjack():
         else:
             over = True
             
-            while (dealer <= 17):
+            while dealer <= 17:
                 dealer, deck = self.draw_card(deck, dealer)
 
-            if (dealer > 21 or agent > dealer):
+            if dealer > 21 or agent > dealer:
                 reward = 1
-            elif (agent == dealer):
+            elif agent == dealer:
                 reward = 0
             else:
                 reward = -1
@@ -67,17 +67,15 @@ class blackjack():
         self.dealer = dealer
         self.agent = agent
 
-        if (self.verbose==True):
+        if self.verbose:
             print("--------Action---------")
             self.print_state()
-        
-            
-        return reward, over
 
+        return reward, over
 
     def draw_card(self, deck, hand):
         choice = random.randint(1, self.end)
-        self.end-=1
+        self.end -= 1
 
         hand += deck[choice]
         deck = np.delete(deck, choice)
@@ -94,5 +92,3 @@ class blackjack():
 
         if show_deck:
             print("Deck:", self.deck)
-
-
